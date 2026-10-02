@@ -6,6 +6,7 @@ from railforge.routing.clearance import route_ok
 from railforge.signaling.block_occupancy import conflicts
 from railforge.workflows.control import RailForgeWorkflowControl
 from railforge.workflows.features import RailForgeFeatureService
+from railforge.crew.connection_workflow import CrewConnectionService
 from railforge.capability_catalog import load_capabilities
 
 
@@ -13,6 +14,7 @@ class RailForgeService:
     def __init__(self, control: RailForgeWorkflowControl | None = None):
         self.control = control or RailForgeWorkflowControl()
         self.features = RailForgeFeatureService(self.control)
+        self._crew_connections: CrewConnectionService | None = None
 
     def health(self):
         return {
@@ -37,4 +39,11 @@ class RailForgeService:
 
     def workflow(self):
         return self.control
+
+    def crew_connections(self):
+        """Stateful cross-sector crew connection + lodging guarantee plane."""
+        if self._crew_connections is None:
+            self._crew_connections = CrewConnectionService(
+                stream=self.control.stream, trail=self.control.trail)
+        return self._crew_connections
 
